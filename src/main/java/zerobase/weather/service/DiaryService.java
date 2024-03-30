@@ -3,11 +3,14 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import zerobase.weather.WeatherApplication;
 import zerobase.weather.domain.DateWeather;
 import zerobase.weather.domain.Diary;
 import zerobase.weather.repository.DateWeatherRepository;
@@ -22,20 +25,24 @@ import java.util.List;
 import java.util.Map;
 @Service @Transactional(readOnly = true)
 public class DiaryService {
-    @Value("80de571943e6a01ad2a4ae077985b39d")private String apiKey;
+    @Value("${openweathermap.key}")private String apiKey;
     private final DiaryRepository diaryRepository;
     private final DateWeatherRepository dateWeatherRepository;
+    private static final Logger logger= LoggerFactory.getLogger(WeatherApplication.class);
     public DiaryService(DiaryRepository diaryRepository,
                         DateWeatherRepository dateWeatherRepository){
         this.diaryRepository=diaryRepository;
         this.dateWeatherRepository=dateWeatherRepository;}
-    @Transactional @Scheduled(cron="0/5 * * * * *")
+    @Transactional @Scheduled(cron="0 0 1 * * *")
     public void saveWeatherDate(){dateWeatherRepository.save(getWeatherFromApi());}
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public void createDairy(LocalDate date, String text){
+        logger.info("started to create diary");
         DateWeather dateWeather=getDateWeather(date);
         Diary nowDiary=new Diary();nowDiary.setDateWeather(dateWeather);
-        nowDiary.setText(text);diaryRepository.save(nowDiary);}
+        nowDiary.setText(text);diaryRepository.save(nowDiary);
+        logger.info("end to create diary");
+    }
         /* String weatherData= getWeatherString();
         Map<String,Object> parsedWeather=parseWeather(weatherData);
         Diary nowDiary=new Diary();
@@ -52,11 +59,13 @@ public class DiaryService {
         dateWeather.setIcon(parsedWeather.get("icon").toString());
         dateWeather.setTemperature((Double) parsedWeather.get("temp"));return dateWeather;}
     private DateWeather getDateWeather(LocalDate date){
-        List<DateWeather> dateWeatherListFromDB=dateWeatherRepository.findAllByDate(date);
-        if(dateWeatherListFromDB.size()==0){return getWeatherFromApi();
-        }else {return dateWeatherListFromDB.get(0);}}
+        List<DateWeather> dateWeatherListFromDB= dateWeatherRepository.findAllByDate(date);
+            if(dateWeatherListFromDB.size()>0){System.out.println("get weather from db");
+    return dateWeatherListFromDB.get(0);}else {System.out.println("get weather from api");
+            return getWeatherFromApi();}}
     @Transactional(readOnly = true)
     public List<Diary> readDiary(LocalDate date){
+        logger.debug("read diary");
         return diaryRepository.findAllByDate(date);}
     public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
         return diaryRepository.findAllByDateBetween(startDate,endDate);}
@@ -66,7 +75,7 @@ public class DiaryService {
     public void deleteDairy(LocalDate date) {
         diaryRepository.deleteAllByDate(date);}
     private String getWeatherString(){
-        String apiUrl="https://api.openweathermap.org/data/2.5/weather?q=seoul&appid="+apiKey;
+        String apiUrl="https://api.openweathermap.org/data/2.5/weather?q=seoul&appid="+apiKey;//[1]
         try{URL url=new URL(apiUrl);
             HttpURLConnection connection=(HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
