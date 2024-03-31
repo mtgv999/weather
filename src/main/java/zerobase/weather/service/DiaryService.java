@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import zerobase.weather.WeatherApplication;
 import zerobase.weather.domain.DateWeather;
 import zerobase.weather.domain.Diary;
+import zerobase.weather.error.InvalidDate;
 import zerobase.weather.repository.DateWeatherRepository;
 import zerobase.weather.repository.DiaryRepository;
 import java.io.BufferedReader;
@@ -34,14 +35,15 @@ public class DiaryService {
         this.diaryRepository=diaryRepository;
         this.dateWeatherRepository=dateWeatherRepository;}
     @Transactional @Scheduled(cron="0 0 1 * * *")
-    public void saveWeatherDate(){dateWeatherRepository.save(getWeatherFromApi());}
+    public void saveWeatherDate(){//logger.info("오늘도 날씨 데이터 잘 가져옴");
+        dateWeatherRepository.save(getWeatherFromApi());}
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public void createDairy(LocalDate date, String text){
         logger.info("started to create diary");
         DateWeather dateWeather=getDateWeather(date);
         Diary nowDiary=new Diary();nowDiary.setDateWeather(dateWeather);
         nowDiary.setText(text);diaryRepository.save(nowDiary);
-        logger.info("end to create diary");
+        logger.info("end to create diary");//logger.error();logger.warn();
     }
         /* String weatherData= getWeatherString();
         Map<String,Object> parsedWeather=parseWeather(weatherData);
@@ -65,7 +67,9 @@ public class DiaryService {
             return getWeatherFromApi();}}
     @Transactional(readOnly = true)
     public List<Diary> readDiary(LocalDate date){
-        logger.debug("read diary");
+        //logger.debug("read diary");
+        if(date.isAfter(LocalDate.ofYearDay(3050,1))){
+            throw new InvalidDate();}
         return diaryRepository.findAllByDate(date);}
     public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
         return diaryRepository.findAllByDateBetween(startDate,endDate);}
