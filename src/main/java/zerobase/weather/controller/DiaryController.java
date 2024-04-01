@@ -22,9 +22,10 @@ import java.util.List;
     return diaryService.readDiary(date);}
     @ApiOperation("선택한 기간 중의 모든 일기 데이터를 가져옵니다")
     @GetMapping("/read/diaries") List<Diary> readDiaries
-            (@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate startDate,
+            (@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE)
+             @ApiParam(value = "조회된 기간의 첫번째 날",example = "2024-03-28") LocalDate startDate,
              @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE)
-             @ApiParam(value = "날짜 형식: yyyy-MM-dd",example = "2024-03-28") LocalDate endDate){
+             @ApiParam(value = "조회된 기간의 마지막 날",example = "2024-03-28") LocalDate endDate){//[3]
     return diaryService.readDiaries(startDate,endDate);}
     @PutMapping("/update/diary")
     void updateDiary(@RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE)

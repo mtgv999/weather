@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 @Service @Transactional(readOnly = true)
 public class DiaryService {
-    @Value("${openweathermap.key}")private String apiKey;
+    @Value("80de571943e6a01ad2a4ae077985b39d")private String apiKey;
     private final DiaryRepository diaryRepository;
     private final DateWeatherRepository dateWeatherRepository;
     private static final Logger logger= LoggerFactory.getLogger(WeatherApplication.class);
@@ -35,7 +35,7 @@ public class DiaryService {
         this.diaryRepository=diaryRepository;
         this.dateWeatherRepository=dateWeatherRepository;}
     @Transactional @Scheduled(cron="0 0 1 * * *")
-    public void saveWeatherDate(){//logger.info("오늘도 날씨 데이터 잘 가져옴");
+    public void saveWeatherDate(){logger.info("오늘도 날씨 데이터 잘 가져옴");//[3]
         dateWeatherRepository.save(getWeatherFromApi());}
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public void createDairy(LocalDate date, String text){

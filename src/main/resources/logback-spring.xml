@@ -19,4 +19,4 @@
     <root level="${LOGS_LEVEL}">
         <appender-ref ref="FILE"/>
     </root>
-</configuration><!-- [2]
+</configuration>
